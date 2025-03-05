@@ -1,0 +1,6 @@
+pool:
+  name: Default
+
+steps:
+- script: echo "✅ L'agent fonctionne !"
+  displayName: "Test Agent"
