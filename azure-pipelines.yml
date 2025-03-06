@@ -11,6 +11,14 @@ steps:
   displayName: 'Installer Node.js 12'
 
 - script: |
+    echo "🔍 Vérification du répertoire de travail"
+    pwd
+    ls -la
+  workingDirectory: $(Build.SourcesDirectory)
+  displayName: 'Afficher le répertoire et fichiers'
+
+- script: |
+    echo "♻️ Nettoyage du cache et des dépendances"
     rm -rf package-lock.json node_modules
     npm cache clean --force
     npm install --legacy-peer-deps
@@ -19,11 +27,14 @@ steps:
   displayName: 'Installer les dépendances'
 
 - script: |
-    npm install -g @angular/cli@6.0.8 --legacy-peer-deps
+    echo "🚀 Installation de Angular CLI"
+    npm install -g @angular/cli@6.0.8 --legacy-peer-deps --force
+    ng version
   displayName: 'Installer Angular CLI'
 
 - script: |
-    ng build --configuration production  # Exécution avec Angular CLI
+    echo "🏗️ Lancement du build Angular"
+    ng build --configuration=production
   workingDirectory: $(Build.SourcesDirectory)
   displayName: 'Construire l’application Angular'
 
