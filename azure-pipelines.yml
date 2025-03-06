@@ -22,7 +22,7 @@ steps:
     rmdir /s /q node_modules
     del package-lock.json
     npm cache clean --force
-    npm ci --legacy-peer-deps
+    npm install --legacy-peer-deps
     npm rebuild node-sass
   workingDirectory: $(Build.SourcesDirectory)
   displayName: 'Installer les dépendances'
@@ -35,7 +35,9 @@ steps:
 
 - script: |
     echo "🔧 Vérification des dépendances Angular"
-    npm list @angular/core rxjs
+    npm list --depth=0
+    if npm list @angular/core | findstr "empty"; then echo "⚠️ @angular/core non trouvé, réinstallation nécessaire"; exit 1; fi
+    if npm list rxjs | findstr "empty"; then echo "⚠️ rxjs non trouvé, réinstallation nécessaire"; exit 1; fi
   displayName: 'Vérifier @angular/core et rxjs'
 
 - script: |
