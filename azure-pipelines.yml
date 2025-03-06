@@ -34,15 +34,17 @@ steps:
   displayName: 'Installer Angular CLI'
 
 - script: |
-    echo "🔧 Vérification des dépendances Angular"
-    npm list --depth=0
-    if npm list @angular/core | findstr "empty"; then echo "⚠️ @angular/core non trouvé, réinstallation nécessaire"; exit 1; fi
-    if npm list rxjs | findstr "empty"; then echo "⚠️ rxjs non trouvé, réinstallation nécessaire"; exit 1; fi
-  displayName: 'Vérifier @angular/core et rxjs'
-
-- script: |
-    echo "📥 Installation forcée de @angular/core et rxjs si manquants"
-    npm install @angular/core@6.0.3 rxjs@6.0.0 --legacy-peer-deps
+    echo "🔧 Vérification et réinstallation des dépendances Angular"
+    npm install @angular/animations@6.0.3 \
+                @angular/common@6.0.3 \
+                @angular/compiler@6.0.3 \
+                @angular/core@6.0.3 \
+                @angular/forms@6.0.3 \
+                @angular/http@6.0.3 \
+                @angular/platform-browser@6.0.3 \
+                @angular/platform-browser-dynamic@6.0.3 \
+                @angular/router@6.0.3 \
+                rxjs@6.0.0 --legacy-peer-deps --force
   displayName: 'Forcer l’installation de @angular/core et rxjs'
 
 - script: |
