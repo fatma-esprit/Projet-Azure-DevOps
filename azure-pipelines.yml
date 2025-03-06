@@ -2,7 +2,7 @@ trigger:
   - main
 
 pool:
-  vmImage: 'ubuntu-latest'  # Exécuter la pipeline sur une machine Ubuntu
+  name: Default
 
 steps:
 - task: NodeTool@0
