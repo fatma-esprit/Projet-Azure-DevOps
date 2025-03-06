@@ -1,0 +1,28 @@
+# Starter pipeline
+# Start with a minimal pipeline that you can customize to build and deploy your code.
+# Add steps that build, run tests, deploy, and more:
+# https://aka.ms/yaml
+
+trigger:
+  - main
+
+pool:
+  vmImage: 'ubuntu-latest'  # Exécuter la pipeline sur une machine Ubuntu
+
+steps:
+- task: NodeTool@0
+  inputs:
+    versionSpec: '10.16.3'  # Version de Node.js utilisée
+  displayName: 'Installer Node.js'
+
+- script: |
+    npm install -g @angular/cli@6.0.8  # Installer Angular CLI 6.0.8
+    npm install  # Installer les dépendances
+    ng build --prod  # Construire l'application Angular
+  displayName: 'Construire l’application Angular'
+
+- task: PublishBuildArtifacts@1
+  inputs:
+    pathToPublish: 'dist'  # Le répertoire de sortie de build
+    artifactName: 'drop'  # Nom de l’artifact
+  displayName: 'Publier les artefacts de build'
