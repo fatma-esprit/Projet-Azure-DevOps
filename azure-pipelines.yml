@@ -1,38 +1,30 @@
-# Déclencheur : Exécution de la pipeline à chaque push sur la branche main
 trigger:
 - main
 
-# Pool d'agent utilisé (ici, l'agent auto-hébergé que tu as configuré)
 pool:
-  name: Default  # Assure-toi que ton agent est bien enregistré sous ce nom
+  name: Default  # Ton agent auto-hébergé
 
-# Étapes de la pipeline
 steps:
-# Étape 1 : Installer Node.js version 20
 - task: NodeTool@0
   inputs:
-    versionSpec: '20.x'  # On installe Node.js 20 (compatible avec ton projet)
-  displayName: 'Installer Node.js 20'
+    versionSpec: '12.x'  # Node.js 12 compatible avec Angular 6
+  displayName: 'Installer Node.js 12'
 
-# Étape 2 : Installer et mettre à jour les dépendances
 - script: |
-    npm install -g npm@latest  # Mettre à jour NPM
-    npm --version  # Vérification de la version de NPM
-    node --version  # Vérification de la version de Node.js
-    npm install  # Installation des dépendances du projet
-    npm rebuild node-sass  # Reconstruction si nécessaire
-  workingDirectory: $(Build.SourcesDirectory)  # S'assure d'exécuter la commande dans le répertoire du code source
+    rm -rf package-lock.json node_modules
+    npm cache clean --force
+    npm install --legacy-peer-deps
+    npm rebuild node-sass
+  workingDirectory: $(Build.SourcesDirectory)
   displayName: 'Installer les dépendances'
 
-# Étape 3 : Construire l'application Angular
 - script: |
     npm run build --configuration production
-  workingDirectory: $(Build.SourcesDirectory)  # S'assure que la construction se fait dans le bon répertoire
+  workingDirectory: $(Build.SourcesDirectory)
   displayName: 'Construire l’application Angular'
 
-# Étape 4 : Publier les artefacts de build
 - task: PublishBuildArtifacts@1
   inputs:
-    pathToPublish: '$(Build.SourcesDirectory)/dist'  # Dossier contenant l'application Angular buildée
+    pathToPublish: '$(Build.SourcesDirectory)/dist'
     artifactName: 'drop'
   displayName: 'Publier les artefacts de build'
