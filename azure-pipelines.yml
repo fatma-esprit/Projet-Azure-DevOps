@@ -19,10 +19,16 @@ steps:
 
 - script: |
     echo "♻️ Nettoyage du cache et des dépendances"
+    cd $(Build.SourcesDirectory)
     rmdir /s /q node_modules
     del package-lock.json
     npm cache clean --force
-    npm install --prefix $(Build.SourcesDirectory) --legacy-peer-deps
+  workingDirectory: $(Build.SourcesDirectory)
+  displayName: 'Nettoyer les dépendances'
+
+- script: |
+    echo "📦 Installation des dépendances"
+    npm install --legacy-peer-deps
     npm rebuild node-sass
   workingDirectory: $(Build.SourcesDirectory)
   displayName: 'Installer les dépendances'
@@ -35,24 +41,13 @@ steps:
 
 - script: |
     echo "🔧 Vérification et réinstallation des dépendances Angular"
-    cd $(Build.SourcesDirectory)
-    npm install @angular/animations@6.0.3 \
-                @angular/common@6.0.3 \
-                @angular/compiler@6.0.3 \
-                @angular/core@6.0.3 \
-                @angular/forms@6.0.3 \
-                @angular/http@6.0.3 \
-                @angular/platform-browser@6.0.3 \
-                @angular/platform-browser-dynamic@6.0.3 \
-                @angular/router@6.0.3 \
-                rxjs@6.0.0 --legacy-peer-deps --force
+    npm install @angular/core@6.0.3 @angular/router@6.0.3 rxjs@6.0.0 --legacy-peer-deps --force
   workingDirectory: $(Build.SourcesDirectory)
   displayName: 'Forcer l’installation de @angular/core et rxjs'
 
 - script: |
     echo "🏗️ Lancement du build Angular"
-    cd $(Build.SourcesDirectory)
-    ng build --configuration=production
+    ng build --configuration production
   workingDirectory: $(Build.SourcesDirectory)
   displayName: 'Construire l’application Angular'
 
