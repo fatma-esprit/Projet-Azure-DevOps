@@ -19,7 +19,7 @@ steps:
   displayName: 'Installer les dépendances'
 
 - script: |
-    npm install -g @angular/cli@6.0.8 --force  # Installation de Angular CLI sans erreur
+    npm install -g @angular/cli@6.0.8 --legacy-peer-deps
   displayName: 'Installer Angular CLI'
 
 - script: |
