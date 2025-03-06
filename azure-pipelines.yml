@@ -34,9 +34,14 @@ steps:
   displayName: 'Installer Angular CLI'
 
 - script: |
-    echo "🔧 Installation de @angular-devkit/build-angular"
-    npm install --save-dev @angular-devkit/build-angular
-  displayName: 'Installer @angular-devkit/build-angular'
+    echo "🔧 Vérification des dépendances Angular"
+    npm list @angular/core rxjs
+  displayName: 'Vérifier @angular/core et rxjs'
+
+- script: |
+    echo "📥 Installation forcée de @angular/core et rxjs si manquants"
+    npm install @angular/core@6.0.3 rxjs@6.0.0 --legacy-peer-deps
+  displayName: 'Forcer l’installation de @angular/core et rxjs'
 
 - script: |
     echo "🏗️ Lancement du build Angular"
