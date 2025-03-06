@@ -7,7 +7,7 @@ pool:
 steps:
 - task: NodeTool@0
   inputs:
-    versionSpec: '12.x'  # Node.js 12 compatible avec Angular 6
+    versionSpec: '12.x'  # Utilisation de Node.js 12 compatible avec Angular 6
   displayName: 'Installer Node.js 12'
 
 - script: |
@@ -19,7 +19,11 @@ steps:
   displayName: 'Installer les dépendances'
 
 - script: |
-    npm run build --configuration production
+    npm install -g @angular/cli@6.0.8  # Installation de Angular CLI
+  displayName: 'Installer Angular CLI'
+
+- script: |
+    ng build --configuration production  # Exécution avec Angular CLI
   workingDirectory: $(Build.SourcesDirectory)
   displayName: 'Construire l’application Angular'
 
