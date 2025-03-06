@@ -1,23 +1,28 @@
 trigger:
-  - main
+- main
 
 pool:
-  name: Default
+  name: Default  # Utilisation de ton agent auto-hébergé
 
 steps:
 - task: NodeTool@0
   inputs:
-    versionSpec: '10.16.3'  # Version de Node.js utilisée
+    versionSpec: '16.x'
   displayName: 'Installer Node.js'
 
 - script: |
-    npm install -g @angular/cli@6.0.8  # Installer Angular CLI 6.0.8
-    npm install  # Installer les dépendances
-    ng build --prod  # Construire l'application Angular
+    npm install -g npm@latest  # Mise à jour de npm
+    npm install  # Installation des dépendances du projet
+    npm rebuild node-sass  # Reconstruction si nécessaire
+  displayName: 'Installer les dépendances'
+
+- script: |
+    npm run build --configuration production
+  workingDirectory: $(Build.SourcesDirectory)
   displayName: 'Construire l’application Angular'
 
 - task: PublishBuildArtifacts@1
   inputs:
-    pathToPublish: 'dist'  # Le répertoire de sortie de build
-    artifactName: 'drop'  # Nom de l’artifact
+    pathToPublish: '$(Build.SourcesDirectory)/dist'
+    artifactName: 'drop'
   displayName: 'Publier les artefacts de build'
