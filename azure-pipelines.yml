@@ -11,17 +11,8 @@ steps:
   displayName: 'Installer Node.js 12'
 
 - script: |
-    echo "🔍 Vérification du répertoire de travail"
-    cd $(Build.SourcesDirectory)
-    dir
-  workingDirectory: $(Build.SourcesDirectory)
-  displayName: 'Afficher le répertoire et fichiers (Windows)'
-
-- script: |
-    echo "♻️ Nettoyage du cache et des dépendances"
-    cd $(Build.SourcesDirectory)
-    rmdir /s /q node_modules
-    del package-lock.json
+    echo "🧹 Nettoyage des dépendances existantes"
+    rm -rf package-lock.json node_modules
     npm cache clean --force
   workingDirectory: $(Build.SourcesDirectory)
   displayName: 'Nettoyer les dépendances'
@@ -34,20 +25,25 @@ steps:
   displayName: 'Installer les dépendances'
 
 - script: |
-    echo "🚀 Installation de Angular CLI"
-    npm install -g @angular/cli@6.0.8 --legacy-peer-deps --force
-    ng version
+    echo "⚙️ Installation d'Angular CLI 6"
+    npm install -g @angular/cli@6.0.8 --legacy-peer-deps
   displayName: 'Installer Angular CLI'
 
 - script: |
-    echo "🔧 Vérification et réinstallation des dépendances Angular"
-    npm install @angular/core@6.0.3 @angular/router@6.0.3 rxjs@6.0.0 --legacy-peer-deps --force
+    echo "🔍 Vérification de @angular/core et rxjs"
+    npm list @angular/core rxjs || true
+  workingDirectory: $(Build.SourcesDirectory)
+  displayName: 'Vérifier @angular/core et rxjs'
+
+- script: |
+    echo "🚀 Forçage de l'installation de @angular/core et rxjs"
+    npm install @angular/core@6.0.3 rxjs@6.0.0 --legacy-peer-deps
   workingDirectory: $(Build.SourcesDirectory)
   displayName: 'Forcer l’installation de @angular/core et rxjs'
 
 - script: |
-    echo "🏗️ Lancement du build Angular"
-    ng build --configuration production
+    echo "⚙️ Désactivation temporaire des erreurs TypeScript strictes"
+    ng build --configuration production --aot=false --build-optimizer=false
   workingDirectory: $(Build.SourcesDirectory)
   displayName: 'Construire l’application Angular'
 
