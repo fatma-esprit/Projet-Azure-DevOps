@@ -1,54 +1,70 @@
-trigger:
-- main
-
 pool:
-  name: Default  # Ton agent auto-hébergé
+  name: Default  # Assure que l'agent utilisé est bien celui du pool "Default"
+  demands:
+    - Agent.Name -equals AgentDevops  # Vérifie que l'agent est bien "AgentDevops"
 
-steps:
-- task: NodeTool@0
-  inputs:
-    versionSpec: '12.x'  # Utilisation de Node.js 12 compatible avec Angular 6
-  displayName: 'Installer Node.js 12'
+stages:
+- stage: Build
+  displayName: "🔧 Construction"
+  jobs:
+  - job: Build_App
+    displayName: "📦 Build de l'application"
+    steps:
+    - task: NodeTool@0
+      inputs:
+        versionSpec: '12.x'  # Utilisation de Node.js 12 compatible avec Angular 6
+      displayName: 'Installer Node.js 12'
 
-- script: |
-    echo "🧹 Nettoyage des dépendances existantes"
-    rm -rf package-lock.json node_modules
-    npm cache clean --force
-  workingDirectory: $(Build.SourcesDirectory)
-  displayName: 'Nettoyer les dépendances'
+    - script: |
+        echo "🧹 Nettoyage des dépendances existantes"
+        rm -rf package-lock.json node_modules
+        npm cache clean --force
+      workingDirectory: $(Build.SourcesDirectory)
+      displayName: 'Nettoyer les dépendances'
 
-- script: |
-    echo "📦 Installation des dépendances"
-    npm install --legacy-peer-deps
-    npm rebuild node-sass
-  workingDirectory: $(Build.SourcesDirectory)
-  displayName: 'Installer les dépendances'
+    - script: |
+        echo "📦 Installation des dépendances"
+        npm install --legacy-peer-deps
+        npm rebuild node-sass
+      workingDirectory: $(Build.SourcesDirectory)
+      displayName: 'Installer les dépendances'
 
-- script: |
-    echo "⚙️ Installation d'Angular CLI 6"
-    npm install -g @angular/cli@6.0.8 --legacy-peer-deps
-  displayName: 'Installer Angular CLI'
+    - script: |
+        echo "⚙️ Installation d'Angular CLI 6"
+        npm install -g @angular/cli@6.0.8 --legacy-peer-deps
+      displayName: 'Installer Angular CLI'
 
-- script: |
-    echo "🔍 Vérification de @angular/core et rxjs"
-    npm list @angular/core rxjs || true
-  workingDirectory: $(Build.SourcesDirectory)
-  displayName: 'Vérifier @angular/core et rxjs'
+    - script: |
+        echo "🔍 Vérification de @angular/core et rxjs"
+        npm list @angular/core rxjs || true
+      workingDirectory: $(Build.SourcesDirectory)
+      displayName: 'Vérifier @angular/core et rxjs'
 
-- script: |
-    echo "🚀 Forçage de l'installation de @angular/core et rxjs"
-    npm install @angular/core@6.0.3 rxjs@6.0.0 --legacy-peer-deps
-  workingDirectory: $(Build.SourcesDirectory)
-  displayName: 'Forcer l’installation de @angular/core et rxjs'
+    - script: |
+        echo "🚀 Forçage de l'installation de @angular/core et rxjs"
+        npm install @angular/core@6.0.3 rxjs@6.0.0 --legacy-peer-deps
+      workingDirectory: $(Build.SourcesDirectory)
+      displayName: 'Forcer l’installation de @angular/core et rxjs'
 
-- script: |
-    echo "⚙️ Désactivation temporaire des erreurs TypeScript strictes"
-    ng build --configuration production --aot=false --build-optimizer=false
-  workingDirectory: $(Build.SourcesDirectory)
-  displayName: 'Construire l’application Angular'
+    - script: |
+        echo "⚙️ Désactivation temporaire des erreurs TypeScript strictes"
+        ng build --configuration production --aot=false --build-optimizer=false
+      workingDirectory: $(Build.SourcesDirectory)
+      displayName: 'Construire l’application Angular'
 
-- task: PublishBuildArtifacts@1
-  inputs:
-    pathToPublish: '$(Build.SourcesDirectory)/dist'
-    artifactName: 'drop'
-  displayName: 'Publier les artefacts de build'
+    - powershell: |
+        gci env:* | sort-object name | Format-Table -AutoSize | Out-File $env:BUILD_ARTIFACTSTAGINGDIRECTORY/environment-variables.txt
+      displayName: 'Exporter les variables d’environnement'
+
+    - task: CopyFiles@2
+      inputs:
+        sourceFolder: '$(Build.SourcesDirectory)'
+        contents: '**/$(BuildConfiguration)/**/?(*.exe|*.dll|*.pdb)'
+        targetFolder: '$(Build.ArtifactStagingDirectory)'
+      displayName: 'Copier les fichiers de build'
+
+    - task: PublishBuildArtifacts@1
+      inputs:
+        pathToPublish: '$(Build.ArtifactStagingDirectory)'
+        artifactName: drop
+      displayName: 'Publier les artefacts de build'
