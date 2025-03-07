@@ -1,3 +1,8 @@
+pool:
+  name: Default  # Assure que l'agent utilisé est bien celui du pool "Default"
+  demands:
+    - Agent.Name -equals AgentDevops  # Vérifie que l'agent est bien "AgentDevops"
+
 stages:
 - stage: Build
   displayName: "🔧 Construction"
@@ -47,7 +52,8 @@ stages:
       workingDirectory: $(Build.SourcesDirectory)
       displayName: 'Construire l’application Angular'
 
-    - powershell: gci env:* | sort-object name | Format-Table -AutoSize | Out-File $env:BUILD_ARTIFACTSTAGINGDIRECTORY/environment-variables.txt
+    - powershell: |
+        gci env:* | sort-object name | Format-Table -AutoSize | Out-File $env:BUILD_ARTIFACTSTAGINGDIRECTORY/environment-variables.txt
       displayName: 'Exporter les variables d’environnement'
 
     - task: CopyFiles@2
