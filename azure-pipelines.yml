@@ -1,7 +1,7 @@
 pool:
-  name: Default  # Assure que l'agent utilisé est bien celui du pool "Default"
+  name: Default  
   demands:
-    - Agent.Name -equals AgentDevops  # Vérifie que l'agent est bien "AgentDevops"
+    - Agent.Name -equals AgentDevops  
 
 stages:
 - stage: Build
@@ -10,52 +10,62 @@ stages:
   - job: Build_App
     displayName: "📦 Build de l'application"
     steps:
+
+    # 📈 Étape 1 : Préparer l'analyse SonarCloud
+    - task: SonarCloudPrepare@1
+      inputs:
+        SonarCloud: "SonarCloud"  # Service connection SonarCloud configuré dans Azure DevOps
+        organization: "fatma-esprit"  # Ton organisation SonarCloud
+        scannerMode: "CLI"
+        configMode: "manual"
+        cliProjectKey: "ProjetAzureDevOps"
+        cliProjectName: "Projet Azure DevOps"
+        cliSources: "."
+        extraProperties: |
+          sonar.exclusions=**/node_modules/**, **/*.spec.ts
+          sonar.login=$(SONAR_TOKEN)
+
+    # 📈 Étape 2 : Installer Node.js
     - task: NodeTool@0
       inputs:
-        versionSpec: '12.x'  # Utilisation de Node.js 12 compatible avec Angular 6
+        versionSpec: '12.x'
       displayName: 'Installer Node.js 12'
 
+    # 📈 Étape 3 : Nettoyer les dépendances
     - script: |
-        echo "🧹 Nettoyage des dépendances existantes"
+        echo "🧩 Nettoyage des dépendances"
         rm -rf package-lock.json node_modules
         npm cache clean --force
-      workingDirectory: $(Build.SourcesDirectory)
       displayName: 'Nettoyer les dépendances'
 
+    # 📈 Étape 4 : Installer les dépendances Angular
     - script: |
         echo "📦 Installation des dépendances"
         npm install --legacy-peer-deps
         npm rebuild node-sass
-      workingDirectory: $(Build.SourcesDirectory)
       displayName: 'Installer les dépendances'
 
+    # 📈 Étape 5 : Installer Angular CLI
     - script: |
         echo "⚙️ Installation d'Angular CLI 6"
         npm install -g @angular/cli@6.0.8 --legacy-peer-deps
       displayName: 'Installer Angular CLI'
 
+    # 📈 Étape 6 : Construire l’application Angular
     - script: |
-        echo "🔍 Vérification de @angular/core et rxjs"
-        npm list @angular/core rxjs || true
-      workingDirectory: $(Build.SourcesDirectory)
-      displayName: 'Vérifier @angular/core et rxjs'
-
-    - script: |
-        echo "🚀 Forçage de l'installation de @angular/core et rxjs"
-        npm install @angular/core@6.0.3 rxjs@6.0.0 --legacy-peer-deps
-      workingDirectory: $(Build.SourcesDirectory)
-      displayName: 'Forcer l’installation de @angular/core et rxjs'
-
-    - script: |
-        echo "⚙️ Désactivation temporaire des erreurs TypeScript strictes"
+        echo "⚙️ Construction de l'application"
         ng build --configuration production --aot=false --build-optimizer=false
-      workingDirectory: $(Build.SourcesDirectory)
       displayName: 'Construire l’application Angular'
 
-    - powershell: |
-        gci env:* | sort-object name | Format-Table -AutoSize | Out-File $env:BUILD_ARTIFACTSTAGINGDIRECTORY/environment-variables.txt
-      displayName: 'Exporter les variables d’environnement'
+    # 📈 Étape 7 : Exécuter l’analyse SonarCloud
+    - task: SonarCloudAnalyze@1
+      displayName: "🔍 Exécuter l'analyse SonarCloud"
 
+    # 📈 Étape 8 : Publier les résultats SonarCloud
+    - task: SonarCloudPublish@1
+      displayName: "📊 Publier les résultats SonarCloud"
+
+    # 📈 Étape 9 : Copier les fichiers de build
     - task: CopyFiles@2
       inputs:
         sourceFolder: '$(Build.SourcesDirectory)'
@@ -63,6 +73,7 @@ stages:
         targetFolder: '$(Build.ArtifactStagingDirectory)'
       displayName: 'Copier les fichiers de build'
 
+    # 📈 Étape 10 : Publier les artefacts de build
     - task: PublishBuildArtifacts@1
       inputs:
         pathToPublish: '$(Build.ArtifactStagingDirectory)'
