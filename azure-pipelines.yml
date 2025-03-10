@@ -11,10 +11,10 @@ stages:
     displayName: "📦 Build de l'application"
     steps:
 
-    # 📌 Étape 1 : Préparer l'analyse SonarCloud
+    # 📌 Étape 1 : Préparer l'analyse SonarCloud (Ajouté une deuxième fois comme demandé)
     - task: SonarCloudPrepare@1
       inputs:
-        SonarCloud: "SonarCloud"  # Assurez-vous que ce nom correspond à votre connexion de service
+        SonarCloud: "SonarCloud"
         organization: "fatma-esprit"
         scannerMode: "CLI"
         configMode: "manual"
@@ -23,9 +23,8 @@ stages:
         cliSources: "."
         extraProperties: |
           sonar.host.url=https://sonarcloud.io
-          sonar.organization=fatma-esprit
           sonar.projectKey=fatma-esprit_Projet-Azure-DevOps
-          sonar.sources=.
+          sonar.organization=fatma-esprit
           sonar.token=$(SONAR_TOKEN)
 
     # 📌 Étape 2 : Installer Node.js
