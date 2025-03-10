@@ -11,45 +11,27 @@ stages:
     displayName: "📦 Build de l'application"
     steps:
 
-    # 📌 Étape 1 : Préparer l'analyse SonarCloud (Ajouté une deuxième fois comme demandé)
+    # 📌 Étape 1 : Préparer l'analyse SonarCloud (Mise à jour avec les bonnes configurations)
     - task: SonarCloudPrepare@1
       inputs:
         SonarCloud: "SonarCloud"
         organization: "fatma-esprit"
+        projectKey: "fatma-esprit_Projet-Azure-DevOps"
+        projectName: "Projet Azure DevOps"
         scannerMode: "CLI"
-        configMode: "manual"
-        cliProjectKey: "fatma-esprit_Projet-Azure-DevOps"
-        cliProjectName: "Projet Azure DevOps"
-        cliSources: "."
         extraProperties: |
-          sonar.host.url=https://sonarcloud.io
           sonar.projectKey=fatma-esprit_Projet-Azure-DevOps
           sonar.organization=fatma-esprit
-          sonar.token=$(SONAR_TOKEN)
-
-    # 📌 Étape 2 : Ajouter une deuxième préparation SonarCloud (comme demandé)
-    - task: SonarCloudPrepare@1
-      inputs:
-        SonarCloud: "SonarCloud"
-        organization: "fatma-esprit"
-        scannerMode: "CLI"
-        configMode: "manual"
-        cliProjectKey: "fatma-esprit_Projet-Azure-DevOps"
-        cliProjectName: "Projet Azure DevOps"
-        cliSources: "."
-        extraProperties: |
           sonar.host.url=https://sonarcloud.io
-          sonar.organization=fatma-esprit
-          sonar.projectKey=fatma-esprit_Projet-Azure-DevOps
-          sonar.token=$(SONAR_TOKEN)
+          sonar.sources=.
 
-    # 📌 Étape 3 : Installer Node.js
+    # 📌 Étape 2 : Installer Node.js
     - task: NodeTool@0
       inputs:
         versionSpec: '12.x'
       displayName: 'Installer Node.js 12'
 
-    # 📌 Étape 4 : Nettoyer les dépendances
+    # 📌 Étape 3 : Nettoyer les dépendances
     - script: |
         echo "🧹 Nettoyage des dépendances"
         rm -rf package-lock.json node_modules
@@ -57,7 +39,7 @@ stages:
       workingDirectory: $(Build.SourcesDirectory)
       displayName: 'Nettoyer les dépendances'
 
-    # 📌 Étape 5 : Installer les dépendances
+    # 📌 Étape 4 : Installer les dépendances
     - script: |
         echo "📦 Installation des dépendances"
         npm install --legacy-peer-deps
@@ -65,47 +47,66 @@ stages:
       workingDirectory: $(Build.SourcesDirectory)
       displayName: 'Installer les dépendances'
 
-    # 📌 Étape 6 : Installer Angular CLI
+    # 📌 Étape 5 : Installer Angular CLI
     - script: |
         echo "⚙️ Installation d'Angular CLI 6"
         npm install -g @angular/cli@6.0.8 --legacy-peer-deps
       displayName: 'Installer Angular CLI'
 
-    # 📌 Étape 7 : Vérifier les versions
+    # 📌 Étape 6 : Vérifier les versions
     - script: |
         echo "🔍 Vérification de @angular/core et rxjs"
         npm list @angular/core rxjs || true
       workingDirectory: $(Build.SourcesDirectory)
       displayName: 'Vérifier @angular/core et rxjs'
 
-    # 📌 Étape 8 : Forcer l’installation de @angular/core et rxjs
+    # 📌 Étape 7 : Forcer l’installation de @angular/core et rxjs
     - script: |
         echo "🚀 Forçage de l'installation de @angular/core et rxjs"
         npm install @angular/core@6.0.3 rxjs@6.0.0 --legacy-peer-deps
       workingDirectory: $(Build.SourcesDirectory)
       displayName: 'Forcer l’installation de @angular/core et rxjs'
 
-    # 📌 Étape 9 : Construire l’application Angular
+    # 📌 Étape 8 : Construire l’application Angular
     - script: |
         echo "⚙️ Désactivation temporaire des erreurs TypeScript strictes"
         ng build --configuration production --aot=false --build-optimizer=false
       workingDirectory: $(Build.SourcesDirectory)
       displayName: 'Construire l’application Angular'
 
-    # 📌 Étape 10 : Exécuter l’analyse SonarCloud
+    # 📌 Étape 9 : Exécuter l’analyse SonarCloud
     - task: SonarCloudAnalyze@1
       displayName: "🔍 Exécuter l'analyse SonarCloud"
 
-    # 📌 Étape 11 : Publier les résultats SonarCloud
-    - task: SonarCloudPublish@1
-      displayName: "📊 Publier les résultats SonarCloud"
+    # 📌 Étape 10 : (Optionnel) Publier les résultats SonarCloud (Déconseillé)
+    # - task: SonarCloudPublish@1
+    #   inputs:
+    #     pollingTimeoutSec: '300'
+    #   displayName: "📊 Publier les résultats SonarCloud"
 
-    # 📌 Étape 12 : Exporter les variables d’environnement
+    # 📌 Étape 11 : Exécuter les tests unitaires
+    - script: |
+        echo "🧪 Exécution des tests"
+        npm install --legacy-peer-deps
+        npm run test
+      displayName: 'Exécuter les tests unitaires'
+
+    # 📌 Étape 12 : Publier les résultats des tests
+    - task: PublishTestResults@2
+      inputs:
+        testResultsFiles: 'srctest-results/TEST-results.xml'
+        testRunTitle: 'Résultats des tests du frontend'
+        mergeTestResults: true
+        failTaskOnFailedTests: true
+      condition: always()
+      displayName: 'Publier les résultats des tests'
+
+    # 📌 Étape 13 : Exporter les variables d’environnement
     - powershell: |
         gci env:* | sort-object name | Format-Table -AutoSize | Out-File $env:BUILD_ARTIFACTSTAGINGDIRECTORY/environment-variables.txt
       displayName: 'Exporter les variables d’environnement'
 
-    # 📌 Étape 13 : Copier les fichiers de build
+    # 📌 Étape 14 : Copier les fichiers de build
     - task: CopyFiles@2
       inputs:
         sourceFolder: '$(Build.SourcesDirectory)'
@@ -113,7 +114,7 @@ stages:
         targetFolder: '$(Build.ArtifactStagingDirectory)'
       displayName: 'Copier les fichiers de build'
 
-    # 📌 Étape 14 : Publier les artefacts de build
+    # 📌 Étape 15 : Publier les artefacts de build
     - task: PublishBuildArtifacts@1
       inputs:
         pathToPublish: '$(Build.ArtifactStagingDirectory)'
