@@ -1,7 +1,5 @@
 pool:
   name: Default  
-  demands:
-    - Agent.Name -equals AgentDevops  
 
 stages:
 - stage: Build
