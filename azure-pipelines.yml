@@ -1,7 +1,7 @@
 pool:
-  name: Default  # Assure que l'agent utilisé est bien celui du pool "Default"
+  name: Default  
   demands:
-    - Agent.Name -equals AgentDevops  # Vérifie que l'agent est bien "AgentDevops"
+    - Agent.Name -equals AgentDevops  
 
 stages:
 - stage: Build
@@ -14,23 +14,29 @@ stages:
     # 📌 Étape 1 : Préparer l'analyse SonarCloud
     - task: SonarCloudPrepare@1
       inputs:
-        SonarCloud: "SonarCloud"  # Service Connection configuré dans Azure DevOps
-        organization: "fatma-esprit"  # Nom de votre organisation SonarCloud
+        SonarCloud: "SonarCloud"  # Assurez-vous que ce nom correspond à votre connexion de service
+        organization: "fatma-esprit"
         scannerMode: "CLI"
         configMode: "manual"
-        cliProjectKey: "ProjetAzureDevOps"
+        cliProjectKey: "fatma-esprit_Projet-Azure-DevOps"
         cliProjectName: "Projet Azure DevOps"
         cliSources: "."
+        extraProperties: |
+          sonar.host.url=https://sonarcloud.io
+          sonar.organization=fatma-esprit
+          sonar.projectKey=fatma-esprit_Projet-Azure-DevOps
+          sonar.sources=.
+          sonar.token=$(SONAR_TOKEN)
 
     # 📌 Étape 2 : Installer Node.js
     - task: NodeTool@0
       inputs:
-        versionSpec: '12.x'  # Utilisation de Node.js 12 compatible avec Angular 6
+        versionSpec: '12.x'
       displayName: 'Installer Node.js 12'
 
-    # 📌 Étape 3 : Nettoyer les dépendances existantes
+    # 📌 Étape 3 : Nettoyer les dépendances
     - script: |
-        echo "🧹 Nettoyage des dépendances existantes"
+        echo "🧹 Nettoyage des dépendances"
         rm -rf package-lock.json node_modules
         npm cache clean --force
       workingDirectory: $(Build.SourcesDirectory)
