@@ -11,14 +11,14 @@ stages:
     displayName: "📦 Build de l'application"
     steps:
 
-    # 📌 Étape 1 : Installer Java (Placement corrigé)
-    - task: JavaToolInstaller@0
+    # 📌 Étape 1 : Installer Java (Correction de l'erreur `jdkArchitectureOption`)
+    - task: JavaToolInstaller@1
       inputs:
         versionSpec: '11'
         jdkArchitecture: 'x64'
         jdkSource: 'PreInstalled'
 
-    # 📌 Étape 2 : Préparer l'analyse SonarCloud (Mise à jour avec les bonnes configurations)
+    # 📌 Étape 2 : Préparer l'analyse SonarCloud
     - task: SonarCloudPrepare@1
       inputs:
         SonarCloud: "SonarCloud"
@@ -85,35 +85,29 @@ stages:
     - task: SonarCloudAnalyze@1
       displayName: "🔍 Exécuter l'analyse SonarCloud"
 
-    # 📌 Étape 11 : (Optionnel) Publier les résultats SonarCloud
-    # - task: SonarCloudPublish@1
-    #   inputs:
-    #     pollingTimeoutSec: '300'
-    #   displayName: "📊 Publier les résultats SonarCloud"
-
-    # 📌 Étape 12 : Exécuter les tests unitaires
+    # 📌 Étape 11 : Exécuter les tests unitaires
     - script: |
         echo "🧪 Exécution des tests"
         npm install --legacy-peer-deps
         npm run test
       displayName: 'Exécuter les tests unitaires'
 
-    # 📌 Étape 13 : Publier les résultats des tests
+    # 📌 Étape 12 : Publier les résultats des tests
     - task: PublishTestResults@2
       inputs:
-        testResultsFiles: '**/TEST-results.xml'  # Correction du chemin
+        testResultsFiles: '**/TEST-results.xml'
         testRunTitle: 'Résultats des tests du frontend'
         mergeTestResults: true
         failTaskOnFailedTests: true
       condition: always()
       displayName: 'Publier les résultats des tests'
 
-    # 📌 Étape 14 : Exporter les variables d’environnement
+    # 📌 Étape 13 : Exporter les variables d’environnement
     - powershell: |
         gci env:* | sort-object name | Format-Table -AutoSize | Out-File $env:BUILD_ARTIFACTSTAGINGDIRECTORY/environment-variables.txt
       displayName: 'Exporter les variables d’environnement'
 
-    # 📌 Étape 15 : Copier les fichiers de build
+    # 📌 Étape 14 : Copier les fichiers de build
     - task: CopyFiles@2
       inputs:
         sourceFolder: '$(Build.SourcesDirectory)'
@@ -121,7 +115,7 @@ stages:
         targetFolder: '$(Build.ArtifactStagingDirectory)'
       displayName: 'Copier les fichiers de build'
 
-    # 📌 Étape 16 : Publier les artefacts de build
+    # 📌 Étape 15 : Publier les artefacts de build
     - task: PublishBuildArtifacts@1
       inputs:
         pathToPublish: '$(Build.ArtifactStagingDirectory)'
