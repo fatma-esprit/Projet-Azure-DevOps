@@ -11,7 +11,22 @@ stages:
     displayName: "📦 Build de l'application"
     steps:
 
-    # 📌 Étape 1 : Préparer l'analyse SonarCloud (Mise à jour avec les bonnes configurations)
+    # 📌 Étape 1 : Installer et configurer Java 11
+    - task: JavaToolInstaller@1
+      inputs:
+        versionSpec: '11'
+        jdkArchitecture: 'x64'
+        jdkSource: 'PreInstalled'
+      displayName: "Installer Java 11"
+
+    # 📌 Étape 2 : Vérifier la version de Java
+    - script: |
+        echo "🛠️ Configuration de Java 11"
+        echo "JAVA_HOME = $JAVA_HOME"
+        java -version
+      displayName: "Vérifier la version de Java"
+
+    # 📌 Étape 3 : Préparer l'analyse SonarCloud
     - task: SonarCloudPrepare@1
       inputs:
         SonarCloud: "SonarCloud"
@@ -25,13 +40,13 @@ stages:
           sonar.host.url=https://sonarcloud.io
           sonar.sources=.
 
-    # 📌 Étape 2 : Installer Node.js
+    # 📌 Étape 4 : Installer Node.js
     - task: NodeTool@0
       inputs:
         versionSpec: '12.x'
       displayName: 'Installer Node.js 12'
 
-    # 📌 Étape 3 : Nettoyer les dépendances
+    # 📌 Étape 5 : Nettoyer les dépendances
     - script: |
         echo "🧹 Nettoyage des dépendances"
         rm -rf package-lock.json node_modules
@@ -39,7 +54,7 @@ stages:
       workingDirectory: $(Build.SourcesDirectory)
       displayName: 'Nettoyer les dépendances'
 
-    # 📌 Étape 4 : Installer les dépendances
+    # 📌 Étape 6 : Installer les dépendances
     - script: |
         echo "📦 Installation des dépendances"
         npm install --legacy-peer-deps
@@ -47,51 +62,51 @@ stages:
       workingDirectory: $(Build.SourcesDirectory)
       displayName: 'Installer les dépendances'
 
-    # 📌 Étape 5 : Installer Angular CLI
+    # 📌 Étape 7 : Installer Angular CLI
     - script: |
         echo "⚙️ Installation d'Angular CLI 6"
         npm install -g @angular/cli@6.0.8 --legacy-peer-deps
       displayName: 'Installer Angular CLI'
 
-    # 📌 Étape 6 : Vérifier les versions
+    # 📌 Étape 8 : Vérifier les versions
     - script: |
         echo "🔍 Vérification de @angular/core et rxjs"
         npm list @angular/core rxjs || true
       workingDirectory: $(Build.SourcesDirectory)
       displayName: 'Vérifier @angular/core et rxjs'
 
-    # 📌 Étape 7 : Forcer l’installation de @angular/core et rxjs
+    # 📌 Étape 9 : Forcer l’installation de @angular/core et rxjs
     - script: |
         echo "🚀 Forçage de l'installation de @angular/core et rxjs"
         npm install @angular/core@6.0.3 rxjs@6.0.0 --legacy-peer-deps
       workingDirectory: $(Build.SourcesDirectory)
       displayName: 'Forcer l’installation de @angular/core et rxjs'
 
-    # 📌 Étape 8 : Construire l’application Angular
+    # 📌 Étape 10 : Construire l’application Angular
     - script: |
         echo "⚙️ Désactivation temporaire des erreurs TypeScript strictes"
         ng build --configuration production --aot=false --build-optimizer=false
       workingDirectory: $(Build.SourcesDirectory)
       displayName: 'Construire l’application Angular'
 
-    # 📌 Étape 9 : Exécuter l’analyse SonarCloud
+    # 📌 Étape 11 : Exécuter l’analyse SonarCloud
     - task: SonarCloudAnalyze@1
       displayName: "🔍 Exécuter l'analyse SonarCloud"
 
-    # 📌 Étape 10 : (Optionnel) Publier les résultats SonarCloud (Déconseillé)
+    # 📌 Étape 12 : (Optionnel) Publier les résultats SonarCloud (Déconseillé)
     # - task: SonarCloudPublish@1
     #   inputs:
     #     pollingTimeoutSec: '300'
     #   displayName: "📊 Publier les résultats SonarCloud"
 
-    # 📌 Étape 11 : Exécuter les tests unitaires
+    # 📌 Étape 13 : Exécuter les tests unitaires
     - script: |
         echo "🧪 Exécution des tests"
         npm install --legacy-peer-deps
         npm run test
       displayName: 'Exécuter les tests unitaires'
 
-    # 📌 Étape 12 : Publier les résultats des tests
+    # 📌 Étape 14 : Publier les résultats des tests
     - task: PublishTestResults@2
       inputs:
         testResultsFiles: 'srctest-results/TEST-results.xml'
@@ -101,12 +116,12 @@ stages:
       condition: always()
       displayName: 'Publier les résultats des tests'
 
-    # 📌 Étape 13 : Exporter les variables d’environnement
+    # 📌 Étape 15 : Exporter les variables d’environnement
     - powershell: |
         gci env:* | sort-object name | Format-Table -AutoSize | Out-File $env:BUILD_ARTIFACTSTAGINGDIRECTORY/environment-variables.txt
       displayName: 'Exporter les variables d’environnement'
 
-    # 📌 Étape 14 : Copier les fichiers de build
+    # 📌 Étape 16 : Copier les fichiers de build
     - task: CopyFiles@2
       inputs:
         sourceFolder: '$(Build.SourcesDirectory)'
@@ -114,7 +129,7 @@ stages:
         targetFolder: '$(Build.ArtifactStagingDirectory)'
       displayName: 'Copier les fichiers de build'
 
-    # 📌 Étape 15 : Publier les artefacts de build
+    # 📌 Étape 17 : Publier les artefacts de build
     - task: PublishBuildArtifacts@1
       inputs:
         pathToPublish: '$(Build.ArtifactStagingDirectory)'
