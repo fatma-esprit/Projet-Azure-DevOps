@@ -81,7 +81,7 @@ stages:
     # 📌 Étape 10 : (Optionnel) Publier les résultats SonarCloud (Déconseillé)
     # - task: SonarCloudPublish@1
     #   inputs:
-    #     pollingTimeoutSec: '300'
+    #     pollingTimeoutSec: '3000'
     #   displayName: "📊 Publier les résultats SonarCloud"
 
     # 📌 Étape 11 : Exécuter les tests unitaires
