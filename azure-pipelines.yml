@@ -78,20 +78,14 @@ stages:
     - task: SonarCloudAnalyze@1
       displayName: "🔍 Exécuter l'analyse SonarCloud"
 
-    # 📌 Étape 10 : (Optionnel) Publier les résultats SonarCloud (Déconseillé)
-    # - task: SonarCloudPublish@1
-    #   inputs:
-    #     pollingTimeoutSec: '3000'
-    #   displayName: "📊 Publier les résultats SonarCloud"
-
-    # 📌 Étape 11 : Exécuter les tests unitaires
+    # 📌 Étape 10 : Exécuter les tests unitaires
     - script: |
         echo "🧪 Exécution des tests"
         npm install --legacy-peer-deps
         npm run test
       displayName: 'Exécuter les tests unitaires'
 
-    # 📌 Étape 12 : Publier les résultats des tests
+    # 📌 Étape 11 : Publier les résultats des tests
     - task: PublishTestResults@2
       inputs:
         testResultsFiles: 'srctest-results/TEST-results.xml'
@@ -100,6 +94,15 @@ stages:
         failTaskOnFailedTests: true
       condition: always()
       displayName: 'Publier les résultats des tests'
+
+    # 📌 Étape 12 : Construire et pousser l'image Docker 🐳
+    - task: Docker@2
+      inputs:
+        containerRegistry: 'DockerHub'  # Remplacez par votre connexion à ACR si besoin
+        repository: 'fatmaesprit/mon-app-angular'
+        command: 'buildAndPush'
+        Dockerfile: '**/Dockerfile'
+        tags: 'latest'
 
     # 📌 Étape 13 : Copier les fichiers de build
     - task: CopyFiles@2
