@@ -95,16 +95,24 @@ stages:
       condition: always()
       displayName: 'Publier les résultats des tests'
 
-    # 📌 Étape 12 : Construire et pousser l'image Docker 🐳
+    # 📌 Étape 12 : Connexion à Docker Hub 🐳
     - task: Docker@2
       inputs:
-        containerRegistry: 'DockerHub'  # Remplacez par votre connexion à ACR si besoin
-        repository: 'fatmaesprit/mon-app-angular'
-        command: 'buildAndPush'
-        Dockerfile: '**/Dockerfile'
-        tags: 'latest'
+        command: 'login'
+        containerRegistry: 'DockerHub'
+      displayName: 'Connexion à Docker Hub'
 
-    # 📌 Étape 13 : Copier les fichiers de build
+    # 📌 Étape 13 : Construire et pousser l'image Docker 🐳
+    - task: Docker@2
+      inputs:
+        command: 'buildAndPush'
+        containerRegistry: 'DockerHub'
+        repository: 'fatmaesprit/mon-app-angular'
+        Dockerfile: 'Dockerfile'  # Assurez-vous que le fichier est bien à la racine du repo ou ajustez le chemin
+        tags: 'latest'
+      displayName: 'Build & Push Docker Image to Docker Hub'
+
+    # 📌 Étape 14 : Copier les fichiers de build
     - task: CopyFiles@2
       inputs:
         sourceFolder: '$(Build.SourcesDirectory)'
@@ -112,7 +120,7 @@ stages:
         targetFolder: '$(Build.ArtifactStagingDirectory)'
       displayName: 'Copier les fichiers de build'
 
-    # 📌 Étape 14 : Publier les artefacts de build
+    # 📌 Étape 15 : Publier les artefacts de build
     - task: PublishBuildArtifacts@1
       inputs:
         pathToPublish: '$(Build.ArtifactStagingDirectory)'
