@@ -1,0 +1,62 @@
+trigger:
+- main  # Déclenchement automatique à chaque commit sur main
+
+pool:
+  vmImage: 'ubuntu-latest'
+
+variables:
+  azureServiceConnection: 'Terraform-MI'  # Remplace par le nom exact de ta connexion de service Azure
+  workingDirectory: 'terraform'           # Dossier où se trouvent tes fichiers Terraform
+
+stages:
+- stage: Terraform
+  displayName: "Terraform Deployment AKS"
+  jobs:
+  - job: Terraform_Job
+    displayName: "Terraform Init, Plan & Apply"
+    steps:
+    - checkout: self
+
+    - task: UseAzureCLI@1
+      displayName: 'Azure CLI Login'
+      inputs:
+        azureSubscription: $(azureServiceConnection)
+
+    - task: TerraformInstaller@1
+      displayName: 'Install Terraform'
+      inputs:
+        terraformVersion: '1.3.0'
+
+    - script: |
+        cd $(workingDirectory)
+        terraform init
+      displayName: 'Terraform Init'
+
+    - script: |
+        cd $(workingDirectory)
+        terraform plan -out=tfplan
+      displayName: 'Terraform Plan'
+
+    - script: |
+        cd $(workingDirectory)
+        terraform apply -auto-approve tfplan
+      displayName: 'Terraform Apply'
+
+- stage: DeployToAKS
+  displayName: "Deploy App to AKS"
+  dependsOn: Terraform
+  jobs:
+  - job: Deploy
+    displayName: "kubectl apply deployment"
+    steps:
+    - checkout: self
+
+    - task: UseAzureCLI@1
+      displayName: 'Login to Azure CLI'
+      inputs:
+        azureSubscription: $(azureServiceConnection)
+
+    - script: |
+        az aks get-credentials --resource-group rg-angular-app --name aks-cluster --overwrite-existing
+        kubectl apply -f deployment.yaml
+      displayName: "Deploy app to AKS using kubectl"
