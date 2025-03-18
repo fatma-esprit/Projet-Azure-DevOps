@@ -2,10 +2,12 @@ trigger:
 - main
 
 pool:
-  vmImage: 'ubuntu-latest'
+  name: Default  # Utilisation du pool d'agents auto-hébergés
+  demands:
+    - Agent.Name -equals agent-docker  # Utiliser ton agent Docker
 
 variables:
-  azureServiceConnection: 'Terraform-MI'  # Le nom de ta connexion de service
+  azureServiceConnection: 'Terraform-MI'  # Connexion de service Azure
   resourceGroupName: 'rg-angular-app'
   aksClusterName: 'aks-cluster'
   location: 'East US'
@@ -17,6 +19,12 @@ stages:
   - job: TerraformJob
     steps:
     - checkout: self
+
+    - script: |
+        echo "Vérification de Terraform..."
+        terraform --version
+      displayName: 'Check Terraform Installation'
+
     - script: |
         echo "Initializing Terraform..."
         terraform -chdir=terraform init
@@ -31,6 +39,7 @@ stages:
   - job: Deploy
     steps:
     - checkout: self
+
     - script: |
         echo "Authenticating to Azure with Managed Identity..."
         az login --identity
