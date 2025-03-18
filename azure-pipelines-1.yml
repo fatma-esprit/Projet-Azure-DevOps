@@ -1,10 +1,10 @@
 trigger:
-- main
+  - main
 
 pool:
-  name: Default  # Utilisation du pool d'agents auto-hébergés
+  name: Default  # Pool d'agents auto-hébergés
   demands:
-    - Agent.Name -equals agent-docker  # Utiliser ton agent Docker
+    - Agent.Name -equals 24b7d8575244  # Remplace "agent-docker" par l'ID de ton agent visible dans Azure DevOps
 
 variables:
   azureServiceConnection: 'Terraform-MI'  # Connexion de service Azure
@@ -17,33 +17,36 @@ stages:
   displayName: 'Terraform Deployment'
   jobs:
   - job: TerraformJob
+    displayName: 'Execute Terraform Commands'
     steps:
     - checkout: self
 
     - script: |
-        echo "Vérification de Terraform..."
+        echo "Vérification de Terraform installé dans l’agent..."
         terraform --version
       displayName: 'Check Terraform Installation'
 
     - script: |
-        echo "Initializing Terraform..."
-        terraform -chdir=terraform init
-        terraform -chdir=terraform plan -out=tfplan
-        terraform -chdir=terraform apply -auto-approve tfplan
-      displayName: 'Terraform Apply'
+        echo "Initialisation et déploiement Terraform..."
+        cd terraform
+        terraform init
+        terraform plan -out=tfplan
+        terraform apply -auto-approve tfplan
+      displayName: 'Terraform Init, Plan & Apply'
 
 - stage: DeployToAKS
   displayName: 'Deploy App to AKS'
   dependsOn: Terraform
   jobs:
   - job: Deploy
+    displayName: 'Déploiement Angular vers AKS'
     steps:
     - checkout: self
 
     - script: |
-        echo "Authenticating to Azure with Managed Identity..."
+        echo "Authentification à Azure via Managed Identity..."
         az login --identity
         az aks get-credentials --resource-group $(resourceGroupName) --name $(aksClusterName) --overwrite-existing
-        echo "Applying deployment.yaml"
+        echo "Déploiement des ressources avec deployment.yaml"
         kubectl apply -f deployment.yaml
-      displayName: 'Deploy Angular app to AKS'
+      displayName: 'Deploy Angular App to AKS'
