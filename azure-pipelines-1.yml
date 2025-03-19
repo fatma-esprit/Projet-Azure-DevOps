@@ -13,6 +13,8 @@ variables:
   location: 'East US'
   client_secret: $(client_secret)
   tenant_id: $(tenant_id)
+  client_id: $(client_id)
+  subscription_id: $(subscription_id)
 
 stages:
 - stage: Terraform
@@ -38,7 +40,12 @@ stages:
         echo "Initialisation et déploiement Terraform avec variables..."
         cd terraform
         terraform init
-        terraform plan -var "client_secret=$(client_secret)" -var "tenant_id=$(tenant_id)" -out=tfplan
+        terraform plan \
+          -var "client_secret=$(client_secret)" \
+          -var "tenant_id=$(tenant_id)" \
+          -var "client_id=$(client_id)" \
+          -var "subscription_id=$(subscription_id)" \
+          -out=tfplan
         terraform apply -auto-approve tfplan
       displayName: 'Terraform Init, Plan & Apply'
 
