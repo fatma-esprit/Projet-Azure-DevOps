@@ -2,12 +2,12 @@ trigger:
   - main
 
 pool:
-  name: Default  # Pool d'agents auto-hébergés
+  name: Default
   demands:
-    - Agent.Name -equals 24b7d8575244  # Remplace "agent-docker" par l'ID de ton agent visible dans Azure DevOps
+    - Agent.Name -equals AgentSelfHostedDevops  # Ici, on met bien le nom exact de ton agent
 
 variables:
-  azureServiceConnection: 'Terraform-MI'  # Connexion de service Azure
+  azureServiceConnection: 'Terraform-MI'
   resourceGroupName: 'rg-angular-app'
   aksClusterName: 'aks-cluster'
   location: 'East US'
