@@ -22,6 +22,12 @@ stages:
     - checkout: self
 
     - script: |
+        echo "Test de Terraform depuis l'agent"
+        where terraform
+        terraform -v
+      displayName: "Vérification Terraform dans l'agent"
+
+    - script: |
         echo "Vérification de Terraform installé dans l’agent..."
         terraform --version
       displayName: 'Check Terraform Installation'
