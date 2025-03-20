@@ -7,6 +7,7 @@ pool:
     - Agent.Name -equals AgentSelfHostedDevops
 
 variables:
+  - group: TerraformSecrets  # ✅ Récupère automatiquement les secrets depuis la Library
   - name: resourceGroupName
     value: 'rg-angular-app'
   - name: aksClusterName
@@ -16,31 +17,30 @@ variables:
 
 stages:
 - stage: Terraform
-  displayName: 'Terraform Deployment using MSI'
+  displayName: 'Terraform Deployment (avec client credentials)'
   jobs:
   - job: TerraformJob
-    displayName: 'Execute Terraform Commands via MSI'
+    displayName: 'Execute Terraform Commands'
     steps:
     - checkout: self
 
     - script: |
-        echo "Test de Terraform depuis l'agent"
-        where terraform
+        echo "Vérification de Terraform installé dans l’agent..."
         terraform -v
-      displayName: "Vérification Terraform dans l'agent"
+      displayName: 'Check Terraform Installation'
 
     - script: |
-        echo "Authentification à Azure via Managed Identity..."
-        az login --identity
-      displayName: 'Azure login with Managed Identity'
-
-    - script: |
-        echo "======== Terraform Init, Plan & Apply via MSI ========"
+        echo "Initialisation et déploiement Terraform avec client_id, client_secret, tenant_id, subscription_id..."
         cd terraform
         terraform init
-        terraform plan -out=tfplan
+        terraform plan \
+          -var "client_secret=$(client_secret)" \
+          -var "tenant_id=$(tenant_id)" \
+          -var "client_id=$(client_id)" \
+          -var "subscription_id=$(subscription_id)" \
+          -out=tfplan
         terraform apply -auto-approve tfplan
-      displayName: 'Terraform Init, Plan & Apply with MSI'
+      displayName: 'Terraform Init, Plan & Apply with client credentials'
 
 - stage: DeployToAKS
   displayName: 'Deploy App to AKS'
@@ -52,8 +52,8 @@ stages:
     - checkout: self
 
     - script: |
-        echo "Authentification à Azure via Managed Identity..."
-        az login --identity
+        echo "Authentification à Azure via Azure CLI avec client credentials..."
+        az login --service-principal -u $(client_id) -p $(client_secret) --tenant $(tenant_id)
         az aks get-credentials --resource-group $(resourceGroupName) --name $(aksClusterName) --overwrite-existing
         echo "Déploiement des ressources avec deployment.yaml"
         kubectl apply -f deployment.yaml
