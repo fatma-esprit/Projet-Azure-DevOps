@@ -7,7 +7,6 @@ pool:
     - Agent.Name -equals AgentSelfHostedDevops
 
 variables:
-  - group: TerraformSecrets  # ✅ Variables stockées dans Azure DevOps (pas utilisées ici mais tu peux les garder si besoin)
   - name: resourceGroupName
     value: 'rg-angular-app'
   - name: aksClusterName
@@ -17,10 +16,10 @@ variables:
 
 stages:
 - stage: Terraform
-  displayName: 'Terraform Deployment using Azure CLI'
+  displayName: 'Terraform Deployment using Azure CLI context'
   jobs:
   - job: TerraformJob
-    displayName: 'Execute Terraform Commands via Azure CLI'
+    displayName: 'Execute Terraform Commands'
     steps:
     - checkout: self
 
@@ -30,16 +29,12 @@ stages:
       displayName: 'Check Terraform Installation'
 
     - script: |
-        echo "Connexion Azure via Azure CLI sur l'agent..."
-        az login
-        az account set --subscription "2c8c9627-8263-4a24-be80-9748236b52c2"
-
-        echo "Initialisation et déploiement Terraform via Azure CLI context..."
+        echo "Initialisation et déploiement Terraform avec contexte CLI local..."
         cd terraform
         terraform init
         terraform plan -out=tfplan
         terraform apply -auto-approve tfplan
-      displayName: 'Terraform Init, Plan & Apply using Azure CLI'
+      displayName: 'Terraform Init, Plan & Apply with local az login'
 
 - stage: DeployToAKS
   displayName: 'Deploy App to AKS'
@@ -51,10 +46,9 @@ stages:
     - checkout: self
 
     - script: |
-        echo "Connexion à Azure via Azure CLI pour le déploiement AKS..."
-        az login
-        az account set --subscription "2c8c9627-8263-4a24-be80-9748236b52c2"
+        echo "Utilisation du contexte Azure CLI existant..."
+        az account show
         az aks get-credentials --resource-group $(resourceGroupName) --name $(aksClusterName) --overwrite-existing
-        echo "Déploiement des ressources avec deployment.yaml"
+        echo "Déploiement avec deployment.yaml"
         kubectl apply -f deployment.yaml
       displayName: 'Deploy Angular App to AKS'
