@@ -2,7 +2,7 @@
 variable "location" {
   description = "Région Azure où seront déployées les ressources"
   type        = string
-  default     = "East US"
+  default     = "West Europe"
 }
 
 # ✅ Variable pour le nom du groupe de ressources

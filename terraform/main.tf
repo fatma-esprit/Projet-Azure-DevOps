@@ -5,9 +5,16 @@ terraform {
       version = "~> 3.0"
     }
   }
+
+  backend "azurerm" {
+    resource_group_name  = "cloud-shell-storage-westeurope"
+    storage_account_name = "csb1003200318d650c5"
+    container_name       = "tfstate"
+    key                  = "terraform.tfstate"
+  }
 }
 
-# ✅ Provider AzureRM utilisant l'authentification via Azure CLI (pas besoin de credentials)
+# ✅ Provider AzureRM utilisant l'authentification via Azure CLI
 provider "azurerm" {
   features {}
 }
