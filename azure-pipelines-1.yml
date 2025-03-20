@@ -7,7 +7,7 @@ pool:
     - Agent.Name -equals AgentSelfHostedDevops
 
 variables:
-  - group: TerraformSecrets
+  - group: TerraformSecrets  # ✅ Variables stockées dans Azure DevOps
   - name: resourceGroupName
     value: 'rg-angular-app'
   - name: aksClusterName
@@ -20,7 +20,7 @@ stages:
   displayName: 'Terraform Deployment'
   jobs:
   - job: TerraformJob
-    displayName: 'Execute Terraform Commands with Client Credentials'
+    displayName: 'Execute Terraform Commands'
     steps:
     - checkout: self
 
@@ -30,31 +30,26 @@ stages:
       displayName: 'Check Terraform Installation'
 
     - script: |
-        echo "Initialisation et déploiement Terraform avec credentials..."
+        echo "Initialisation et déploiement Terraform avec client credentials..."
         cd terraform
         terraform init
-        terraform plan \
-          -var "client_secret=$(ARM_CLIENT_SECRET)" \
-          -var "tenant_id=$(ARM_TENANT_ID)" \
-          -var "client_id=$(ARM_CLIENT_ID)" \
-          -var "subscription_id=$(ARM_SUBSCRIPTION_ID)" \
-          -out=tfplan
+        terraform plan -var "client_id=$(ARM_CLIENT_ID)" -var "client_secret=$(ARM_CLIENT_SECRET)" -var "tenant_id=$(ARM_TENANT_ID)" -var "subscription_id=$(ARM_SUBSCRIPTION_ID)" -out=tfplan
         terraform apply -auto-approve tfplan
-      displayName: 'Terraform Init, Plan & Apply (via client credentials)'
+      displayName: 'Terraform Init, Plan & Apply'
 
 - stage: DeployToAKS
   displayName: 'Deploy App to AKS'
   dependsOn: Terraform
   jobs:
   - job: Deploy
-    displayName: 'Deploy Angular vers AKS'
+    displayName: 'Déploiement Angular vers AKS'
     steps:
     - checkout: self
 
     - script: |
-        echo "Authentification Azure via az login (manual)..."
+        echo "Authentification à Azure via client credentials..."
         az login --service-principal -u $(ARM_CLIENT_ID) -p $(ARM_CLIENT_SECRET) --tenant $(ARM_TENANT_ID)
         az aks get-credentials --resource-group $(resourceGroupName) --name $(aksClusterName) --overwrite-existing
-        echo "Déploiement avec deployment.yaml"
+        echo "Déploiement des ressources avec deployment.yaml"
         kubectl apply -f deployment.yaml
       displayName: 'Deploy Angular App to AKS'
