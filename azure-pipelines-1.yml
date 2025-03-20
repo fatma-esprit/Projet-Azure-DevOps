@@ -66,10 +66,14 @@ stages:
     steps:
     - checkout: self
 
-    - script: |
-        echo "Récupération des credentials du cluster AKS via Managed Identity..."
-        az account show
-        az aks get-credentials --resource-group $(resourceGroupName) --name $(aksClusterName) --overwrite-existing
-        echo "Déploiement des ressources Kubernetes"
-        kubectl apply -f deployment.yaml
-      displayName: 'Deploy Angular App to AKS'
+    - task: AzureCLI@2
+      displayName: 'Deploy to AKS using Managed Identity'
+      inputs:
+        azureSubscription: 'Terraform-MI'
+        scriptType: 'bash'
+        scriptLocation: 'inlineScript'
+        inlineScript: |
+          echo "Récupération des credentials du cluster AKS via Managed Identity..."
+          az aks get-credentials --resource-group $(resourceGroupName) --name $(aksClusterName) --overwrite-existing
+          echo "Déploiement des ressources Kubernetes"
+          kubectl apply -f deployment.yaml
