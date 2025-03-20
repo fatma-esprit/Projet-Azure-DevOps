@@ -8,33 +8,56 @@ pool:
 
 variables:
   - name: resourceGroupName
-    value: 'rg-angular-app'
+    value: 'cloud-shell-storage-westeurope'
   - name: aksClusterName
     value: 'aks-cluster'
   - name: location
-    value: 'East US'
+    value: 'westeurope'
 
 stages:
 - stage: Terraform
-  displayName: 'Terraform Deployment using Azure CLI context'
+  displayName: 'Terraform Deployment using Managed Identity'
   jobs:
   - job: TerraformJob
-    displayName: 'Execute Terraform Commands'
+    displayName: 'Execute Terraform Commands with MI'
     steps:
     - checkout: self
+
+    - task: TerraformInstaller@1
+      displayName: 'Install Terraform'
 
     - script: |
         echo "Vérification de Terraform installé dans l’agent..."
         terraform --version
       displayName: 'Check Terraform Installation'
 
-    - script: |
-        echo "Initialisation et déploiement Terraform avec contexte CLI local..."
-        cd terraform
-        terraform init
-        terraform plan -out=tfplan
-        terraform apply -auto-approve tfplan
-      displayName: 'Terraform Init, Plan & Apply with local az login'
+    - task: TerraformTaskV4@4
+      displayName: 'Terraform Init using Managed Identity'
+      inputs:
+        provider: 'azurerm'
+        command: 'init'
+        backendServiceArm: 'Terraform-MI'
+        backendAzureRmResourceGroupName: 'cloud-shell-storage-westeurope'
+        backendAzureRmStorageAccountName: 'csb1003200318d650c5'
+        backendAzureRmContainerName: 'tfstate'
+        backendAzureRmKey: 'terraform.tfstate'
+        workingDirectory: '$(System.DefaultWorkingDirectory)/terraform'
+
+    - task: TerraformTaskV4@4
+      displayName: 'Terraform Plan'
+      inputs:
+        provider: 'azurerm'
+        command: 'plan'
+        workingDirectory: '$(System.DefaultWorkingDirectory)/terraform'
+
+    - task: TerraformTaskV4@4
+      displayName: 'Terraform Apply'
+      inputs:
+        provider: 'azurerm'
+        command: 'apply'
+        workingDirectory: '$(System.DefaultWorkingDirectory)/terraform'
+        environmentServiceNameAzureRM: 'Terraform-MI'
+        additionalArgs: '-auto-approve'
 
 - stage: DeployToAKS
   displayName: 'Deploy App to AKS'
@@ -46,9 +69,9 @@ stages:
     - checkout: self
 
     - script: |
-        echo "Utilisation du contexte Azure CLI existant..."
+        echo "Récupération des credentials du cluster AKS via Managed Identity..."
         az account show
         az aks get-credentials --resource-group $(resourceGroupName) --name $(aksClusterName) --overwrite-existing
-        echo "Déploiement avec deployment.yaml"
+        echo "Déploiement des ressources Kubernetes"
         kubectl apply -f deployment.yaml
       displayName: 'Deploy Angular App to AKS'
