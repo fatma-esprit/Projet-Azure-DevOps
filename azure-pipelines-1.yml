@@ -46,6 +46,7 @@ stages:
         provider: 'azurerm'
         command: 'plan'
         workingDirectory: '$(System.DefaultWorkingDirectory)/terraform'
+        environmentServiceNameAzureRM: 'Terraform-MI'
 
     - task: TerraformTaskV4@4
       displayName: 'Terraform Apply'
