@@ -49,6 +49,7 @@ stages:
         provider: 'azurerm'
         command: 'plan'
         workingDirectory: '$(System.DefaultWorkingDirectory)/terraform'
+        additionalArgs: '-out=tfplan'
 
     - task: TerraformTaskV4@4
       displayName: 'Terraform Apply'
@@ -57,7 +58,7 @@ stages:
         command: 'apply'
         workingDirectory: '$(System.DefaultWorkingDirectory)/terraform'
         environmentServiceNameAzureRM: 'Terraform-MI'
-        additionalArgs: '-auto-approve'
+        additionalArgs: 'tfplan -auto-approve'
 
 - stage: DeployToAKS
   displayName: 'Deploy App to AKS'
