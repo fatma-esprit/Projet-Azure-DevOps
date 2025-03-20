@@ -43,6 +43,14 @@ stages:
         terraform apply -auto-approve tfplan
       displayName: 'Terraform Init, Plan & Apply'
 
+    - script: |
+        echo "======== DÉBUT DE L'ÉTAPE : Terraform Init, Plan & Apply ========"
+        cd terraform
+        terraform init
+        terraform plan -out=tfplan
+        terraform apply -auto-approve tfplan
+      displayName: 'Terraform Init, Plan & Apply with MSI'
+
 - stage: DeployToAKS
   displayName: 'Deploy App to AKS'
   dependsOn: Terraform
