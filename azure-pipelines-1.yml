@@ -7,7 +7,7 @@ pool:
     - Agent.Name -equals AgentSelfHostedDevops
 
 variables:
-  - group: TerraformSecrets  # ✅ Variables stockées dans Azure DevOps
+  - group: TerraformSecrets  # ✅ Variables stockées dans Azure DevOps (pas utilisées ici mais tu peux les garder si besoin)
   - name: resourceGroupName
     value: 'rg-angular-app'
   - name: aksClusterName
@@ -17,10 +17,10 @@ variables:
 
 stages:
 - stage: Terraform
-  displayName: 'Terraform Deployment'
+  displayName: 'Terraform Deployment using Azure CLI'
   jobs:
   - job: TerraformJob
-    displayName: 'Execute Terraform Commands'
+    displayName: 'Execute Terraform Commands via Azure CLI'
     steps:
     - checkout: self
 
@@ -30,12 +30,16 @@ stages:
       displayName: 'Check Terraform Installation'
 
     - script: |
-        echo "Initialisation et déploiement Terraform avec client credentials..."
+        echo "Connexion Azure via Azure CLI sur l'agent..."
+        az login
+        az account set --subscription "2c8c9627-8263-4a24-be80-9748236b52c2"
+
+        echo "Initialisation et déploiement Terraform via Azure CLI context..."
         cd terraform
         terraform init
-        terraform plan -var "client_id=$(ARM_CLIENT_ID)" -var "client_secret=$(ARM_CLIENT_SECRET)" -var "tenant_id=$(ARM_TENANT_ID)" -var "subscription_id=$(ARM_SUBSCRIPTION_ID)" -out=tfplan
+        terraform plan -out=tfplan
         terraform apply -auto-approve tfplan
-      displayName: 'Terraform Init, Plan & Apply'
+      displayName: 'Terraform Init, Plan & Apply using Azure CLI'
 
 - stage: DeployToAKS
   displayName: 'Deploy App to AKS'
@@ -47,8 +51,9 @@ stages:
     - checkout: self
 
     - script: |
-        echo "Authentification à Azure via client credentials..."
-        az login --service-principal -u $(ARM_CLIENT_ID) -p $(ARM_CLIENT_SECRET) --tenant $(ARM_TENANT_ID)
+        echo "Connexion à Azure via Azure CLI pour le déploiement AKS..."
+        az login
+        az account set --subscription "2c8c9627-8263-4a24-be80-9748236b52c2"
         az aks get-credentials --resource-group $(resourceGroupName) --name $(aksClusterName) --overwrite-existing
         echo "Déploiement des ressources avec deployment.yaml"
         kubectl apply -f deployment.yaml
