@@ -23,9 +23,6 @@ stages:
     steps:
     - checkout: self
 
-    - task: TerraformInstaller@1
-      displayName: 'Install Terraform'
-
     - script: |
         echo "Vérification de Terraform installé dans l’agent..."
         terraform --version
@@ -49,7 +46,6 @@ stages:
         provider: 'azurerm'
         command: 'plan'
         workingDirectory: '$(System.DefaultWorkingDirectory)/terraform'
-        additionalArgs: '-out=tfplan'
 
     - task: TerraformTaskV4@4
       displayName: 'Terraform Apply'
@@ -58,7 +54,7 @@ stages:
         command: 'apply'
         workingDirectory: '$(System.DefaultWorkingDirectory)/terraform'
         environmentServiceNameAzureRM: 'Terraform-MI'
-        additionalArgs: 'tfplan -auto-approve'
+        additionalArgs: '-auto-approve'
 
 - stage: DeployToAKS
   displayName: 'Deploy App to AKS'
