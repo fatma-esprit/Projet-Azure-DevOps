@@ -70,10 +70,11 @@ stages:
       displayName: 'Deploy to AKS using Managed Identity'
       inputs:
         azureSubscription: 'Terraform-MI'
-        scriptType: 'bash'
+        scriptType: 'ps'  # Utilisation explicite de PowerShell
         scriptLocation: 'inlineScript'
         inlineScript: |
           echo "Récupération des credentials du cluster AKS via Managed Identity..."
+          az account show
           az aks get-credentials --resource-group $(resourceGroupName) --name $(aksClusterName) --overwrite-existing
           echo "Déploiement des ressources Kubernetes"
           kubectl apply -f deployment.yaml
