@@ -39,25 +39,3 @@ variable "dns_prefix" {
   type        = string
   default     = "angularappk8s"
 }
-
-# ✅ Variables pour l'authentification Azure
-variable "subscription_id" {
-  description = "ID de l'abonnement Azure"
-  type        = string
-}
-
-variable "client_id" {
-  description = "ID du client (appId) pour l'authentification Azure"
-  type        = string
-}
-
-variable "client_secret" {
-  description = "Secret du client pour l'authentification Azure"
-  type        = string
-  sensitive   = true
-}
-
-variable "tenant_id" {
-  description = "ID du tenant Azure"
-  type        = string
-}
