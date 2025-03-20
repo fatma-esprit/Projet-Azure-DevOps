@@ -7,9 +7,13 @@ terraform {
   }
 }
 
-# ✅ Provider AzureRM sans client_id/client_secret (utilisation d'Azure CLI)
+# ✅ Provider AzureRM avec authentification via client credentials
 provider "azurerm" {
   features {}
+  subscription_id = var.subscription_id
+  client_id       = var.client_id
+  client_secret   = var.client_secret
+  tenant_id       = var.tenant_id
 }
 
 resource "azurerm_resource_group" "rg" {
@@ -25,8 +29,8 @@ resource "azurerm_kubernetes_cluster" "aks" {
 
   default_node_pool {
     name       = "default"
-    node_count = 2  # ✅ Retour à 2 nœuds
-    vm_size    = "Standard_B2ms"  # ✅ Retour à Standard_B2ms (2 vCPUs par VM)
+    node_count = 2
+    vm_size    = "Standard_B2ms"
   }
 
   identity {
