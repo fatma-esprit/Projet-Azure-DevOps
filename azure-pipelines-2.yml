@@ -1,0 +1,41 @@
+trigger:
+  - main
+
+pool:
+  name: Default
+  demands:
+    - Agent.Name -equals AgentSelfHostedDevops
+
+variables:
+  - name: resourceGroupName
+    value: 'cloud-shell-storage-westeurope'
+  - name: aksClusterName
+    value: 'aks-cluster'
+
+stages:
+- stage: DeployApp
+  displayName: 'Deploy Angular App to AKS'
+  jobs:
+  - job: Deploy
+    displayName: 'Deploy to AKS'
+    steps:
+    - checkout: self
+
+    - task: AzureCLI@2
+      displayName: 'Deploy Angular App to AKS'
+      inputs:
+        azureSubscription: 'Terraform-MI'
+        scriptType: 'pscore'  # Exécution avec PowerShell Core
+        scriptLocation: 'inlineScript'
+        inlineScript: |
+          echo "Connexion au cluster AKS via Managed Identity..."
+          az aks get-credentials --resource-group $(resourceGroupName) --name $(aksClusterName) --overwrite-existing
+
+          echo "Vérification du cluster :"
+          kubectl get nodes
+
+          echo "Déploiement de l'application avec deployment.yaml"
+          kubectl apply -f deployment.yaml
+
+          echo "Vérification des ressources déployées :"
+          kubectl get all
