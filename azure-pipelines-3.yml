@@ -1,0 +1,49 @@
+trigger:
+  - main
+
+pool:
+  name: Default
+  demands:
+    - Agent.Name -equals AgentSelfHostedDevops
+
+variables:
+  - name: resourceGroupName
+    value: 'cloud-shell-storage-westeurope'
+  - name: aksClusterName
+    value: 'aks-cluster'
+
+stages:
+- stage: InstallMonitoring
+  displayName: 'Install Prometheus & Grafana with Helm'
+  jobs:
+  - job: InstallMonitoringJob
+    displayName: 'Install Prometheus and Grafana'
+    steps:
+    - checkout: self
+
+    - task: AzureCLI@2
+      displayName: 'Connect to AKS and Install Helm Charts'
+      inputs:
+        azureSubscription: 'Terraform-MI'
+        scriptType: 'pscore'
+        scriptLocation: 'inlineScript'
+        inlineScript: |
+          echo "Connexion au cluster AKS..."
+          az aks get-credentials --resource-group $(resourceGroupName) --name $(aksClusterName) --overwrite-existing
+
+          echo "Vérification Helm installé..."
+          helm version || (echo "Helm non installé sur l'agent" && exit 1)
+
+          echo "Ajout des dépôts Helm..."
+          helm repo add prometheus-community https://prometheus-community.github.io/helm-charts
+          helm repo add grafana https://grafana.github.io/helm-charts
+          helm repo update
+
+          echo "Installation de Prometheus..."
+          helm install prometheus prometheus-community/kube-prometheus-stack --namespace monitoring --create-namespace
+
+          echo "Installation de Grafana..."
+          helm install grafana grafana/grafana --namespace monitoring
+
+          echo "Affichage des ressources créées :"
+          kubectl get all -n monitoring
