@@ -56,25 +56,3 @@ stages:
         workingDirectory: '$(System.DefaultWorkingDirectory)/terraform'
         environmentServiceNameAzureRM: 'Terraform-MI'
         additionalArgs: '-auto-approve'
-
-- stage: DeployToAKS
-  displayName: 'Deploy App to AKS'
-  dependsOn: Terraform
-  jobs:
-  - job: Deploy
-    displayName: 'Déploiement Angular vers AKS'
-    steps:
-    - checkout: self
-
-    - task: AzureCLI@2
-      displayName: 'Deploy to AKS using Managed Identity'
-      inputs:
-        azureSubscription: 'Terraform-MI'
-        scriptType: 'pscore'   # ✅ Important pour exécuter correctement sous PowerShell Core
-        scriptLocation: 'inlineScript'
-        inlineScript: |
-          echo "Récupération des credentials du cluster AKS via Managed Identity..."
-          az account show
-          az aks get-credentials --resource-group $(resourceGroupName) --name $(aksClusterName) --overwrite-existing
-          echo "Déploiement des ressources Kubernetes"
-          kubectl apply -f deployment.yaml
