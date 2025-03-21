@@ -8,7 +8,7 @@ pool:
 
 variables:
   - name: resourceGroupName
-    value: 'cloud-shell-storage-westeurope'
+    value: 'rg-angular-app'  # Remplace par le bon groupe
   - name: aksClusterName
     value: 'aks-cluster'
 
@@ -31,7 +31,7 @@ stages:
           echo "Connexion au cluster AKS..."
           az aks get-credentials --resource-group $(resourceGroupName) --name $(aksClusterName) --overwrite-existing
 
-          echo "Vérification Helm installé..."
+          echo "Vérification de la version Helm..."
           helm version || (echo "Helm non installé sur l'agent" && exit 1)
 
           echo "Ajout des dépôts Helm..."
@@ -45,5 +45,5 @@ stages:
           echo "Installation de Grafana..."
           helm install grafana grafana/grafana --namespace monitoring
 
-          echo "Affichage des ressources créées :"
+          echo "Ressources déployées dans l’espace monitoring :"
           kubectl get all -n monitoring
