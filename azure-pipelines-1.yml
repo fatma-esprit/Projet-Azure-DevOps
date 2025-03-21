@@ -70,7 +70,7 @@ stages:
       displayName: 'Deploy to AKS using Managed Identity'
       inputs:
         azureSubscription: 'Terraform-MI'
-        scriptType: 'ps'  # Utilisation explicite de PowerShell
+        scriptType: 'pscore'   # ✅ Important pour exécuter correctement sous PowerShell Core
         scriptLocation: 'inlineScript'
         inlineScript: |
           echo "Récupération des credentials du cluster AKS via Managed Identity..."
