@@ -8,9 +8,9 @@ pool:
 
 variables:
   - name: resourceGroupName
-    value: 'cloud-shell-storage-westeurope'
+    value: 'rg-angular-app'  # ✅ Groupe de ressources corrigé
   - name: aksClusterName
-    value: 'aks-cluster'
+    value: 'aks-cluster'     # ✅ Nom du cluster confirmé
 
 stages:
 - stage: DeployApp
