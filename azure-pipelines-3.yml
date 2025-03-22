@@ -8,7 +8,7 @@ pool:
 
 variables:
   - name: resourceGroupName
-    value: 'rg-angular-app'  # Remplace par ton groupe ressource
+    value: 'rg-angular-app'  
   - name: aksClusterName
     value: 'aks-cluster'
 
@@ -39,16 +39,14 @@ stages:
           helm repo add grafana https://grafana.github.io/helm-charts
           helm repo update
 
-          echo "Création du namespace monitoring (si non-existant)..."
+          echo "Création du namespace monitoring..."
           kubectl create namespace monitoring --dry-run=client -o yaml | kubectl apply -f -
 
-          echo "Installation de Prometheus avec la version stable 45.28.0..."
-          helm install prometheus prometheus-community/kube-prometheus-stack \
-            --namespace monitoring \
-            --version 45.28.0
+          echo "Installation de Prometheus..."
+          helm install prometheus prometheus-community/kube-prometheus-stack --namespace monitoring --version 45.28.0
 
           echo "Installation de Grafana..."
           helm install grafana grafana/grafana --namespace monitoring
 
-          echo "Vérification des ressources déployées :"
+          echo "Ressources déployées dans l’espace monitoring :"
           kubectl get all -n monitoring
